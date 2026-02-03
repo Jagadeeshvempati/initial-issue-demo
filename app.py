@@ -6,7 +6,8 @@ import re
 # Load Initial Issues
 # -----------------------------
 # Excel file must be in the same repo
-df = pd.read_excel("AllKeywords.xlsm", engine="openpyxl")
+df = pd.read_excel("AllKeywords.xlsx")
+
 
 # Normalize column names
 df.columns = df.columns.str.strip().str.lower()
