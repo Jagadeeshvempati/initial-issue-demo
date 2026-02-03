@@ -6,7 +6,8 @@ import re
 # Load Initial Issues
 # -----------------------------
 # Excel file must be in the same repo
-df = pd.read_excel("All Events for keywords.xlsx")
+df = pd.read_csv("All Events for keywords.csv")
+
 
 
 
