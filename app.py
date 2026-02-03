@@ -5,11 +5,14 @@ import re
 # -----------------------------
 # Load Initial Issues
 # -----------------------------
+# Excel file must be in the same repo
 df = pd.read_excel("AllKeywords.xlsm", engine="openpyxl")
+
+# Normalize column names
 df.columns = df.columns.str.strip().str.lower()
 
 # -----------------------------
-# Helpers
+# Helper functions
 # -----------------------------
 def normalize(text):
     text = str(text).lower()
@@ -17,6 +20,7 @@ def normalize(text):
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
+# Generic / noisy terms to ignore
 GENERIC_TERMS = {
     "engine", "system", "unit", "module", "assembly",
     "case", "indicating", "control", "pressure",
@@ -39,13 +43,17 @@ def extract_issue_terms(issue):
         and w not in GENERIC_TERMS
     }
 
+# -----------------------------
+# Build Initial Issue → keywords map
+# IMPORTANT: column name is "initial issues"
+# -----------------------------
 issue_terms = {
     issue: extract_issue_terms(issue)
-    for issue in df["initial issue"].dropna()
+    for issue in df["initial issues"].dropna()
 }
 
 # -----------------------------
-# Core logic
+# Core logic: match + rank
 # -----------------------------
 def match_and_rank_narrative(narrative):
     narrative = normalize(narrative)
@@ -53,8 +61,8 @@ def match_and_rank_narrative(narrative):
 
     for issue, terms in issue_terms.items():
         matched = [
-            t for t in terms
-            if re.search(rf"\b{re.escape(t)}\b", narrative)
+            term for term in terms
+            if re.search(rf"\b{re.escape(term)}\b", narrative)
         ]
 
         if matched:
@@ -71,17 +79,17 @@ def extract_narrative_keywords(narrative):
     valid_terms = set().union(*issue_terms.values())
 
     return sorted(
-        w for w in narrative_words
-        if w in valid_terms and w not in GENERIC_TERMS
+        word for word in narrative_words
+        if word in valid_terms and word not in GENERIC_TERMS
     )
 
 # -----------------------------
-# UI
+# Streamlit UI
 # -----------------------------
 st.set_page_config(page_title="Initial Issue Identifier", layout="wide")
 
 st.title("Initial Issue Auto-Identification (Prototype)")
-st.write("Paste an engine event narrative below.")
+st.write("Paste an engine event narrative below and click **Analyze**.")
 
 narrative = st.text_area(
     "Engine Event Narrative",
@@ -91,16 +99,17 @@ narrative = st.text_area(
 
 if st.button("Analyze"):
     if narrative.strip():
-        keywords = extract_narrative_keywords(narrative)
-        ranked = match_and_rank_narrative(narrative)
+        narrative_keywords = extract_narrative_keywords(narrative)
+        ranked_results = match_and_rank_narrative(narrative)
 
-        st.subheader("Extracted Narrative Keywords")
-        st.write(", ".join(keywords) if keywords else "No keywords detected")
+        st.subheader("🔑 Extracted Narrative Keywords")
+        st.write(", ".join(narrative_keywords) if narrative_keywords else "No keywords detected")
 
-        st.subheader("Ranked Initial Issues")
-        if ranked:
-            st.dataframe(pd.DataFrame(ranked))
+        st.subheader("📋 Ranked Initial Issues")
+        if ranked_results:
+            st.dataframe(pd.DataFrame(ranked_results))
         else:
             st.warning("No relevant Initial Issues found.")
     else:
         st.warning("Please enter a narrative.")
+
