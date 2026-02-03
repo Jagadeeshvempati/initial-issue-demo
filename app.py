@@ -5,7 +5,7 @@ import re
 # -----------------------------
 # Load Initial Issues
 # -----------------------------
-df = pd.read_excel("initial_issues.xlsx")
+df = pd.read_excel("https://github.com/Jagadeeshvempati/initial-issue-demo/blob/main/AllKeywords.xlsm")
 df.columns = df.columns.str.strip().str.lower()
 
 # -----------------------------
